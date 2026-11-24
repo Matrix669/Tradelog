@@ -113,8 +113,12 @@ Zrobione:
 - Postgres w Dockerze, EF Core podłączony, migracja `Init` zastosowana.
 - Frontend z `shadcn create` (Vite) działa.
 - Repo git w roocie.
+- Tokeny ze specu w `frontend/src/index.css` (jasny i ciemny motyw, zmienne shadcn wskazują na tokeny ze specu, `@theme inline` dla kolorów, `rounded-field/card/dialog`, `shadow-float`, style tekstu `text-title`, `text-body`…), font Plus Jakarta Sans (fontsource).
+
+Do poprawy przy okazji:
+- Przycisk z presetu ma `rounded-2xl` i `h-8`, spec mówi 8 px i 40 px (poprawić przy komponentach przycisku).
+- `ThemeProvider` ma `defaultTheme="system"`, spec mówi jasny domyślny.
 
 Następne kroki:
-1. Tokeny ze specu w `frontend/src/index.css` (jasny i ciemny motyw, mapowanie na zmienne shadcn + `profit`/`loss`/`warning`), font Plus Jakarta Sans.
-2. CORS w backendzie dla `http://localhost:5173` i usunięcie `WeatherForecast`.
-3. Pierwsza funkcja pionowa: lista transakcji (encja `Trade` + migracja → `GET /api/trades` → tabela w UI). Na start na danych testowych (seed), integracja z OKX później jako osobna funkcja.
+1. CORS w backendzie dla `http://localhost:5173` i usunięcie `WeatherForecast`.
+2. Pierwsza funkcja pionowa: lista transakcji (encja `Trade` + migracja → `GET /api/trades` → tabela w UI). Na start na danych testowych (seed), integracja z OKX później jako osobna funkcja.
