@@ -1,6 +1,6 @@
 @Tradelog.Api_HostAddress = http://localhost:5110
 
-GET {{Tradelog.Api_HostAddress}}/weatherforecast/
+GET {{Tradelog.Api_HostAddress}}/openapi/v1.json
 Accept: application/json
 
 ###
