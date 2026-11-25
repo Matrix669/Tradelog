@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 using Tradelog.Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,6 +43,7 @@ if (app.Environment.IsDevelopment())
     scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
     
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();

@@ -70,7 +70,7 @@ dotnet ef migrations add <NazwaZmiany>      # nowa migracja
 dotnet ef database update                   # zastosowanie migracji
 dotnet ef migrations script --idempotent -o migrations.sql
 ```
-OpenAPI: `http://localhost:5110/openapi/v1.json`
+OpenAPI: `http://localhost:5110/openapi/v1.json`, Scalar (UI, tylko dev): `http://localhost:5110/scalar`. Przykładowe zapytania w `Tradelog.Api.http` (zmienna `@baseUrl`, bez kropek w nazwie, bo Rider ich nie podstawia). `dotnet watch` zamiast `dotnet run`, żeby zmiany w kodzie wchodziły bez ręcznego restartu.
 
 Frontend (z `frontend/`):
 ```bash
@@ -88,6 +88,9 @@ pnpm lint
 - Lokalne dane bazy: host `localhost`, port `5432`, baza/user `tradelog`, hasło `tradelog_dev` (tylko dev).
 - Migracje tworzymy świadomie, z opisową nazwą. Na produkcję docelowo idempotentny skrypt SQL albo migration bundle w CI, nie `Migrate()` przy starcie (w dev `Program.cs` robi `Migrate()` przy starcie).
 - CORS: polityka `Frontend`, dozwolone originy z konfiguracji `Cors:AllowedOrigins` (`appsettings.Development.json`). `UseCors` stoi przed `UseAuthorization`.
+- Struktura: `Models/` (encje), `Dtos/` (rekordy DTO), `Controllers/`, `Data/` (`AppDbContext`, `DevSeedData`). Kontrolery zwracają DTO przez projekcję `Select` w zapytaniu, nigdy encje. Enumy w bazie i w JSON jako tekst.
+- Seed danych testowych: `UseSeeding`/`UseAsyncSeeding` tylko w Development, tylko do pustej bazy (nie `HasData`). Reset: `dotnet ef database update 0` i `dotnet ef database update`.
+- Pieniądze, ceny, ilości: `decimal` (w Postgresie `numeric`). Daty: `DateTime` w UTC (`timestamptz`).
 
 ## Frontend
 
@@ -122,7 +125,14 @@ Do poprawy przy okazji:
 - `ThemeProvider` ma `defaultTheme="system"`, spec mówi jasny domyślny.
 
 - CORS dla frontendu (origin z konfiguracji), usunięty `WeatherForecast`.
+- Lista transakcji, backend (etapy A–D): encje `Trade` i `Strategy` (1:N), migracja `AddTradesAndStrategies`, seed 14 trade'ów i 5 strategii, `TradeDto` i `GET /api/trades` (sortowanie po `ClosedAt` malejąco, `StrategyName` przez LEFT JOIN, `RMultiple` liczone w SQL). Scalar 3.2.1.
+
+Do poprawy przy okazji (backend):
+- FK `Trades.StrategyId` bez `ON DELETE`: usunięcie używanej strategii skończy się błędem. Przy usuwaniu strategii: `OnDelete(DeleteBehavior.SetNull)` i nowa migracja.
+- W Scalarze/OpenAPI enumy pokazują się jako liczby, a odpowiedź jako `text/plain`, choć API zwraca JSON z tekstowymi enumami. Do sprawdzenia i poprawy (konfiguracja JSON dla OpenAPI, `[Produces("application/json")]`).
+- Trasa z tokenu `[controller]` pokazuje się jako `/api/Trades` (wielka litera). Ewentualnie `AddRouting(o => o.LowercaseUrls = true)`.
 
 Następne kroki:
-1. Pierwsza funkcja pionowa: lista transakcji (encja `Trade` + migracja → seed → DTO → `GET /api/trades` → typ + fetch w React → tabela w UI). Na start na danych testowych (seed), integracja z OKX później jako osobna funkcja. Tabela tymczasowo w `App.tsx`, potem trafia do widoku Transakcje.
-2. Layout aplikacji wg specu (sidebar 240 px, górny pasek z przełącznikiem motywu, routing) z pustymi widokami: Przegląd, Transakcje, Statystyki, Dziennik, Konta.
+1. Lista transakcji, frontend: etap E (`.env.development` z `VITE_API_URL`, TanStack Query, schemat Zod dla `TradeDto`, formatery kwot i dat w `lib/format.ts`) i etap F (tabela shadcn wg mockupu: Instrument + typ/dźwignia, Kierunek, Strategia, Otwarcie i zamknięcie + czas trwania, Wielkość, Śr. cena wejścia → wyjścia, Wynik netto + R, Dziennik). Użytkownik pisze sam. Tabela tymczasowo w `App.tsx`.
+2. Tagi: encja `Tag` z kolorem, relacja wiele do wielu z `Trade`, kolumna Dziennik z kropkami tagów.
+3. Layout aplikacji wg specu (sidebar 240 px, górny pasek z przełącznikiem motywu, routing) z pustymi widokami: Przegląd, Transakcje, Statystyki, Dziennik, Konta.
