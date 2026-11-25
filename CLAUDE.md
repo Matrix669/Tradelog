@@ -43,7 +43,7 @@ Kolejność: najpierw web (React + .NET), potem klient w Swift (iOS/macOS) korzy
 ```
 Tradelog/                  ← root repo (jedno repo dla FE i BE, gałąź master)
 ├── backend/
-│   ├── backend.slnx       ← solucja (otwierana w Riderze)
+│   ├── Tradelog.slnx      ← solucja (otwierana w Riderze)
 │   └── Tradelog.Api/      ← ASP.NET Core Web API
 │       ├── Controllers/
 │       ├── Data/          ← AppDbContext
@@ -86,8 +86,8 @@ pnpm lint
 - **EF Core 10 + Npgsql**, PostgreSQL 18 w Dockerze. `dotnet-ef` zainstalowany globalnie w wersji 10.x.
 - Connection string `ConnectionStrings:Default` jest w **user-secrets**, nie w `appsettings.json`. Tam trafią też klucze OKX. Nigdy nie wpisuj sekretów do plików w repo.
 - Lokalne dane bazy: host `localhost`, port `5432`, baza/user `tradelog`, hasło `tradelog_dev` (tylko dev).
-- Migracje tworzymy świadomie, z opisową nazwą. Na produkcję docelowo idempotentny skrypt SQL albo migration bundle w CI, nie `Migrate()` przy starcie.
-- `WeatherForecast` to przykład z szablonu, do usunięcia.
+- Migracje tworzymy świadomie, z opisową nazwą. Na produkcję docelowo idempotentny skrypt SQL albo migration bundle w CI, nie `Migrate()` przy starcie (w dev `Program.cs` robi `Migrate()` przy starcie).
+- CORS: polityka `Frontend`, dozwolone originy z konfiguracji `Cors:AllowedOrigins` (`appsettings.Development.json`). `UseCors` stoi przed `UseAuthorization`.
 
 ## Frontend
 
@@ -95,7 +95,9 @@ pnpm lint
 - **Tylko Tailwind**: żadnych osobnych plików CSS ani `style={}`. Jedyny wyjątek to tokeny (zmienne CSS) w `src/index.css`.
 - Komponenty shadcn dodawaj przez `pnpm dlx shadcn@latest add <komponent>`, nie przepisuj ich ręcznie.
 - Kolory, typografia, odstępy i zaokrąglenia pochodzą z `docs/design-spec.md`. Używaj tokenów (`bg`, `surface`, `brand`, `profit`, `loss`…), nigdy surowych hexów w komponentach.
-- Font docelowy to **Plus Jakarta Sans** (spec). Preset shadcn ustawił Inter, do podmiany.
+- Font to **Plus Jakarta Sans** (`@fontsource-variable/plus-jakarta-sans`).
+- Kolory: w komponentach shadcn i ogólnym UI nazwy shadcn (`bg-primary`, `text-muted-foreground`), w komponentach domenowych tokeny ze specu, gdy niosą znaczenie (`text-profit`, `bg-loss-soft`, `bg-brand-soft`, `text-warning`).
+- Package manager: **pnpm**.
 - Liczby zawsze z `tabular-nums`. Bez monospace.
 
 ## Zasady UI (skrót ze specu)
@@ -119,6 +121,8 @@ Do poprawy przy okazji:
 - Przycisk z presetu ma `rounded-2xl` i `h-8`, spec mówi 8 px i 40 px (poprawić przy komponentach przycisku).
 - `ThemeProvider` ma `defaultTheme="system"`, spec mówi jasny domyślny.
 
+- CORS dla frontendu (origin z konfiguracji), usunięty `WeatherForecast`.
+
 Następne kroki:
-1. CORS w backendzie dla `http://localhost:5173` i usunięcie `WeatherForecast`.
-2. Pierwsza funkcja pionowa: lista transakcji (encja `Trade` + migracja → `GET /api/trades` → tabela w UI). Na start na danych testowych (seed), integracja z OKX później jako osobna funkcja.
+1. Pierwsza funkcja pionowa: lista transakcji (encja `Trade` + migracja → seed → DTO → `GET /api/trades` → typ + fetch w React → tabela w UI). Na start na danych testowych (seed), integracja z OKX później jako osobna funkcja. Tabela tymczasowo w `App.tsx`, potem trafia do widoku Transakcje.
+2. Layout aplikacji wg specu (sidebar 240 px, górny pasek z przełącznikiem motywu, routing) z pustymi widokami: Przegląd, Transakcje, Statystyki, Dziennik, Konta.
